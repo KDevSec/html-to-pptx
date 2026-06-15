@@ -1,0 +1,19 @@
+README.md
+  s_b44c9b5b33bcd2::t_fc0617c38f0e8d 3,5,7,9-11,13,15,17,23,25,27,29,31,33,35,39,41-43,45-46,50,52,54-58,60,62,64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "c1690253a5ee8ae1a7a50146bcc926b3458209c4",
+  "prompts": {},
+  "sessions": {
+    "s_b44c9b5b33bcd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "40f0c065-acdb-4b47-878d-492183e46ff3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "ly <ly1989abc@126.com>"
+    }
+  }
+}
