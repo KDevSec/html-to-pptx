@@ -1,0 +1,35 @@
+README.md
+  s_b44c9b5b33bcd2::t_bc2651e7156527 27
+  s_b44c9b5b33bcd2::t_b7953baeebfc88 28-34
+references/playbook.md
+  s_b44c9b5b33bcd2::t_839b9fa10bef86 28-30,33,35,41-42
+  s_b44c9b5b33bcd2::t_feded8fb17f563 208-216
+  s_b44c9b5b33bcd2::t_4c3911d5295850 21-23,25-27,31
+scripts/check_deps.py
+  s_b44c9b5b33bcd2::t_504967e261ea6a 5-17,21,24,40-42,48-49,51-53,56-63,65-68,72,74-75,79,82,85-87,93-97,100,102-106,109,111-125,128-132
+  s_b44c9b5b33bcd2::t_c5092eee47f93c 1-4,18-20,22-23,25-39,43-47,50,54-55,64,69-71,73,76-78,80-81,83-84,88-92,98-99,101,107-108,110,126-127,133-135
+scripts/verify.py
+  s_b44c9b5b33bcd2::t_18a9017ee91572 29,31-39,41-43
+SKILL.md
+  s_b44c9b5b33bcd2::t_7a36acea203faa 222
+  s_b44c9b5b33bcd2::t_077bd87eff9fdc 83,88-96
+  s_b44c9b5b33bcd2::t_a23365575abfd4 210
+  s_b44c9b5b33bcd2::t_0d7d72e1300abf 84-87
+  s_b44c9b5b33bcd2::t_d39db8de86ecec 218-221
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "819fecc1b4d1ce39fc3f3730922163cd29e4a8fa",
+  "prompts": {},
+  "sessions": {
+    "s_b44c9b5b33bcd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "40f0c065-acdb-4b47-878d-492183e46ff3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "ly <ly1989abc@126.com>"
+    }
+  }
+}
