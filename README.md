@@ -24,14 +24,16 @@ git clone https://github.com/KDevSec/html-to-pptx.git ~/.claude/skills/html-to-p
 
 ## 前置依赖
 
-构建需要 `python-pptx`、`Pillow`、`playwright`(Chromium);验证步骤需要 `LibreOffice`(`soffice`),`pdftoppm` **可选**(没有它 LibreOffice 也能直接导 PNG,Windows 上可跳过 poppler)。
+构建需要 `python-pptx`、`Pillow`、`playwright`(Chromium)。验证步骤用**本机 office** 渲染:Windows 用 PowerPoint(`pywin32` 驱动 COM)、macOS 用 Keynote(AppleScript)、Linux 用 LibreOffice;有原生 office 就不必装 LibreOffice。
 
-**不用手动逐个检查**——首次使用先跑依赖自检(纯标准库,缺啥也能跑):
+**不用手动逐个检查,也不用自己装**——首次使用直接跑依赖自检,它**默认自动安装缺失项**(纯标准库,缺啥也能跑):
 
 ```bash
-python scripts/check_deps.py          # 只检查(exit 0 = 齐全)
-python scripts/check_deps.py --fix    # 自动装 pip 依赖 + Chromium;系统包(LibreOffice/pdftoppm)会打印对应 OS 命令
+python scripts/check_deps.py          # 默认:自动安装缺失依赖后报告
+python scripts/check_deps.py --check  # 只报告,不安装
 ```
+
+系统包按平台自动装:Linux `apt/dnf/pacman`+sudo、macOS `brew`、Windows `winget`(或 Windows 上装 `pywin32` 驱动 PowerPoint,免装 LibreOffice)。装不了的会打印手动命令。
 
 ## 用法
 
@@ -50,8 +52,9 @@ python $SK/scripts/capture.py board INPUT.html WORK/ --hide "<所有文字 + .ic
 # 2b. 或逐元素抠图(让部分框保持可编辑形状)
 python $SK/scripts/capture.py slice INPUT.html WORK/ --selectors ".mesh,.glasspanel" --isolate
 # 3. 用 scripts/pptx_helpers.py 写 WORK/build.py(背景 → 抠图 → 原生形状 → 原生文字)
-# 4. 渲染自检
+# 4. 渲染自检（用本机 office 渲染：PowerPoint/Keynote/LibreOffice）
 python $SK/scripts/verify.py OUT.pptx --source INPUT.html --region .slide
+python $SK/scripts/verify.py OUT.pptx --open      # 直接在你的 office 里打开看
 ```
 
 ## 目录说明
@@ -61,12 +64,12 @@ python $SK/scripts/verify.py OUT.pptx --source INPUT.html --region .slide
 | `SKILL.md` | skill 本体:触发条件、决策表(原生 vs PNG)、坐标系、工作流、跨平台说明 |
 | `scripts/capture.py` | 无头 Chromium 采集:几何 `geom` / 保真板 `board` / 透明抠图 `slice` |
 | `scripts/pptx_helpers.py` | python-pptx 复用库(`E`/`P`/`rrect`/`textbox`/`chip`/`oval`/`picture`/`save`/`target_cjk_font` 等) |
-| `scripts/verify.py` | LibreOffice 渲染 + 源图并排对比 + 可编辑性报告 |
+| `scripts/verify.py` | 用本机 office 渲染(PowerPoint COM / Keynote / LibreOffice)+ 源图并排对比 + `--open` + 可编辑性报告 |
 | `references/playbook.md` | 完整方法论:坐标换算、采集技巧、组装配方、踩坑清单 |
 
 ## 字体与跨平台
 
-产物永远是标准 `.pptx`(不生成 Keynote 的 `.key`)。默认中文字体为**微软雅黑**;按受众系统切换用 `target_cjk_font('mac'|'linux')`,跨机分发可在 PowerPoint 里嵌入字体以彻底锁定观感。渲染自检在任意系统都用 LibreOffice;最终观感请在你实际演示用的软件里再确认一次。
+产物永远是标准 `.pptx`(不生成 Keynote 的 `.key`)。默认中文字体为**微软雅黑**;按受众系统切换用 `target_cjk_font('mac'|'linux')`,跨机分发可在 PowerPoint 里嵌入字体以彻底锁定观感。渲染自检**优先用本机 office**(Windows=PowerPoint、macOS=Keynote、Linux=LibreOffice),也就是"在你实际演示的软件里打开看"——`verify.py --open` 即此;LibreOffice 仅作跨平台兜底。
 
 ## 许可证
 

@@ -26,8 +26,11 @@ python scripts/check_deps.py            # report; exit 0 = all present
 python scripts/check_deps.py --fix      # auto-install pip deps + chromium
 ```
 Tiers: **CORE** (build) = python-pptx, Pillow, playwright, Chromium. **VERIFY**
-(QA compare only) = LibreOffice; `pdftoppm` is **optional** (LibreOffice can export
-PNG itself, so `verify.py` falls back to `soffice --convert-to png`).
+(render-check only) = the platform's office app — Windows PowerPoint (`pywin32`),
+macOS Keynote, Linux LibreOffice (also the fallback). `pdftoppm` is **optional**
+(LibreOffice can export PNG itself; `verify.py` falls back to `soffice
+--convert-to png`). `check_deps.py` installs `pywin32` for PowerPoint on Windows
+rather than pulling LibreOffice.
 What it verifies (equivalent manual checks):
 ```bash
 python3 -c "import pptx,PIL,playwright; print('py libs ok')"   # NOT playwright.__version__ (no such attr)
@@ -160,18 +163,25 @@ Output is standard `.pptx` → opens in PowerPoint (Win/Mac), Keynote (imports
   - For cross-machine delivery, **embed fonts** (PowerPoint: Options ▸ Save ▸ Embed
     fonts; or LibreOffice save-with-fonts). Only embedding truly locks the look.
   - Last resort for a critical headline: cut it as PNG (loses editability).
-- **Verification renderer:** LibreOffice headless on every OS (`verify.py` locates
-  it cross-platform). Keynote/PowerPoint can't render headless well — use for the
-  final human check on the target machine.
+- **Verification renderer = the platform's own office app** (`verify.py`): Windows
+  → PowerPoint via COM (`pywin32`), macOS → Keynote via AppleScript, Linux →
+  LibreOffice (also the cross-platform fallback). Rendering the check in the actual
+  presentation software is the most faithful verify; `--open` just opens the deck
+  there. So LibreOffice isn't required on Windows/macOS when PowerPoint/Keynote
+  exists — `check_deps.py` installs `pywin32` for PowerPoint rather than LibreOffice.
 
 ## §7 Verification
 
 ```bash
 python scripts/verify.py OUT.pptx --source INPUT.html --region .slide
+python scripts/verify.py OUT.pptx --open      # open in your office app (the human verify)
+# --renderer powerpoint|keynote|libreoffice|auto  to force a renderer
 ```
 Prints `text_runs / shapes / pics` (prove it's not one flat image — text_runs
 should be well above zero and shapes/pics reflect your build) and writes
-`compare.png` (source left, built right). Read it, find drift, fix, rebuild.
+`compare.png` (source left, built right). Read it, find drift, fix, rebuild. The
+render comes from the platform's office app (PowerPoint COM / Keynote / LibreOffice
+fallback), so it matches what the audience sees.
 
 Also sanity-unpack:
 ```python

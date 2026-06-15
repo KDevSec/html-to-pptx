@@ -81,18 +81,22 @@ your first build).
 Work in a scratch dir (e.g. `<figure>-work/`). Keep the source HTML untouched.
 
 ### 0. Dependency self-check (run FIRST, every time)
-Before touching the HTML, confirm the toolchain — CORE (build) = python-pptx,
-Pillow, playwright + Chromium; VERIFY (QA only) = LibreOffice (pdftoppm optional —
-LibreOffice exports PNG itself). Failing late (mid-build) wastes work. The check is
-stdlib-only, so it runs even when nothing is installed:
+Before touching the HTML, run the doctor — it **auto-installs whatever is missing**
+(don't make the user hunt for packages). Failing late (mid-build) wastes work; the
+script is stdlib-only so it runs even when nothing is installed:
 ```bash
-python <skill>/scripts/check_deps.py          # report (exit 0 = all present)
-python <skill>/scripts/check_deps.py --fix    # auto-install pip deps + Chromium
+python <skill>/scripts/check_deps.py          # DEFAULT: auto-install missing deps, then report
+python <skill>/scripts/check_deps.py --check  # report only, install nothing
 ```
-`--fix` installs the Python packages (with the PEP668 `--break-system-packages`
-fallback) and `playwright install chromium`. LibreOffice + pdftoppm are system
-packages — the script prints the exact OS command (apt / brew / choco) for you to
-run. Do not proceed until it reports **all dependencies present**.
+Default mode installs: the Python packages (pip, with the PEP668
+`--break-system-packages` fallback), `playwright install chromium`, and the system
+packages — **LibreOffice** via the detected package manager (Linux apt/dnf/pacman
++sudo · macOS brew · Windows winget), plus poppler on Linux/macOS. Tiers: **CORE**
+(python-pptx, Pillow, playwright, Chromium) must succeed to build; **VERIFY**
+(LibreOffice; pdftoppm optional — `verify.py` falls back to `soffice --convert-to
+png`) is only for the QA compare. If a system install can't run (no package
+manager / sudo declined), it prints the exact manual command. Proceed once CORE is
+present.
 
 ### 1. Capture geometry + reference render
 ```bash
@@ -164,15 +168,22 @@ name+paren split, gradient text caveat) are in `references/playbook.md`.
 ### 5. Verify (and iterate)
 ```bash
 python <skill>/scripts/verify.py output/figure.pptx --source INPUT.html --region .slide
+python <skill>/scripts/verify.py output/figure.pptx --open      # just open it where you present
 ```
 Prints the editable-text/shape/pic counts (proves it's not one flat image) and
 writes `compare.png` (source HTML left, built PPTX right). **Read compare.png**,
 find drift (overlaps, wrong sizes, missing cutouts), fix `build.py`, rebuild.
-Repeat until faithful.
 
-> LibreOffice rendering differs slightly from real PowerPoint (fonts, kerning).
-> Use it for layout/structure comparison; confirm final look in PowerPoint on the
-> target machine. Embed or substitute CJK fonts there if needed.
+The render uses **the platform's own office app** (most faithful — it's what the
+audience sees): Windows → PowerPoint via COM (`pywin32`), macOS → Keynote via
+AppleScript, Linux → LibreOffice; LibreOffice is the cross-platform fallback. So
+"open it in your office app and look" *is* the verify — `--open` does exactly that,
+and the automated compare is just that, scripted. Pick the renderer with
+`--renderer powerpoint|keynote|libreoffice|auto`.
+
+> Each app's rendering differs slightly (fonts, kerning). The automated compare is
+> for layout/structure; trust the final look in the app you'll actually present
+> from. Embed or substitute CJK fonts on the target machine if needed.
 
 ## 跨平台兼容（PowerPoint / Keynote / LibreOffice / Google Slides）
 
@@ -197,20 +208,23 @@ the only real cross-app risk left is **fonts**.
     font embedding. Embedding is the only way to truly lock the look everywhere.
   - If a specific headline MUST look identical and can be non-editable, cut it as
     a PNG too (last resort — loses editability).
-- **Verification renderer is LibreOffice on every OS** (`scripts/verify.py` finds
-  it on Linux `/opt`, macOS app bundle, Windows Program Files, or PATH). It's the
-  one headless renderer available cross-platform. Keynote/PowerPoint have no good
-  headless render path — use them for the **final human eyeball** on the target.
+- **Verification uses each platform's own office app** — `scripts/verify.py`
+  renders via PowerPoint COM (Windows, needs `pywin32`), Keynote AppleScript
+  (macOS), or LibreOffice (Linux / cross-platform fallback). That makes the check
+  match what the audience actually sees. `--open` just opens the deck in the OS
+  office app — the plain human verify. So LibreOffice is **not required** on
+  Windows/macOS if PowerPoint/Keynote is present (`check_deps.py` installs
+  `pywin32` for PowerPoint instead of pulling LibreOffice).
 - **Shapes/alpha/dashed/linear-gradient/PNG** are standard OOXML and render
   consistently across all four apps; that's why the skill sticks to them natively
   and pushes everything fancier into PNG.
 
 ## Bundled resources
 
-- `scripts/check_deps.py` — dependency doctor (run first; `--fix` auto-installs).
+- `scripts/check_deps.py` — dependency doctor; **run first, auto-installs missing deps** (incl LibreOffice via OS package manager); `--check` = report only.
 - `scripts/capture.py` — Chromium geometry dump (`geom`), fidelity board (`board`), transparent cutouts (`slice`).
 - `scripts/pptx_helpers.py` — python-pptx helpers (`E`,`P`,`rgb`,`new_deck`,`rrect`,`rect`,`oval`,`chip`,`textbox`,`picture`,`bg_fill`,`bg_image`,`save`,`set_font_family`,`target_cjk_font`).
-- `scripts/verify.py` — LibreOffice render + side-by-side compare + editability report.
+- `scripts/verify.py` — render via native office app (PowerPoint COM / Keynote / LibreOffice) + side-by-side compare + `--open` + editability report.
 - `references/playbook.md` — the full method: coordinate math, capture technique, the native-vs-cutout rubric in depth, python-pptx assembly recipes, and a hard-won gotchas list. **Read before first build.**
 
 ## Prerequisites
