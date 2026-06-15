@@ -26,14 +26,21 @@ def find_soffice():
 
 def pptx_to_png(pptx, dpi=130):
     so = find_soffice()
-    if not so: raise SystemExit('LibreOffice (soffice) not found')
+    if not so: raise SystemExit('LibreOffice (soffice) not found — needed for the verify step')
     d = tempfile.mkdtemp(prefix='h2p_')
-    subprocess.run([so, '--headless', '--convert-to', 'pdf', '--outdir', d, pptx],
+    if shutil.which('pdftoppm'):                       # preferred: pptx->pdf->png (DPI control)
+        subprocess.run([so, '--headless', '--convert-to', 'pdf', '--outdir', d, pptx],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        pdf = glob.glob(os.path.join(d, '*.pdf'))[0]
+        subprocess.run(['pdftoppm', '-png', '-r', str(dpi), pdf, os.path.join(d, 'p')],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        return sorted(glob.glob(os.path.join(d, 'p*.png')))[0]
+    # fallback (no poppler, e.g. Windows): LibreOffice exports the first slide to PNG itself
+    subprocess.run([so, '--headless', '--convert-to', 'png', '--outdir', d, pptx],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-    pdf = glob.glob(os.path.join(d, '*.pdf'))[0]
-    subprocess.run(['pdftoppm', '-png', '-r', str(dpi), pdf, os.path.join(d, 'p')],
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-    return sorted(glob.glob(os.path.join(d, 'p*.png')))[0]
+    pngs = glob.glob(os.path.join(d, '*.png'))
+    if not pngs: raise SystemExit('LibreOffice PNG export produced no file')
+    return pngs[0]
 
 def html_to_png(src, region, bg='#05070c'):
     from playwright.sync_api import sync_playwright

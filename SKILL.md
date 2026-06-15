@@ -80,6 +80,20 @@ your first build).
 
 Work in a scratch dir (e.g. `<figure>-work/`). Keep the source HTML untouched.
 
+### 0. Dependency self-check (run FIRST, every time)
+Before touching the HTML, confirm the toolchain — CORE (build) = python-pptx,
+Pillow, playwright + Chromium; VERIFY (QA only) = LibreOffice (pdftoppm optional —
+LibreOffice exports PNG itself). Failing late (mid-build) wastes work. The check is
+stdlib-only, so it runs even when nothing is installed:
+```bash
+python <skill>/scripts/check_deps.py          # report (exit 0 = all present)
+python <skill>/scripts/check_deps.py --fix    # auto-install pip deps + Chromium
+```
+`--fix` installs the Python packages (with the PEP668 `--break-system-packages`
+fallback) and `playwright install chromium`. LibreOffice + pdftoppm are system
+packages — the script prints the exact OS command (apt / brew / choco) for you to
+run. Do not proceed until it reports **all dependencies present**.
+
 ### 1. Capture geometry + reference render
 ```bash
 python <skill>/scripts/capture.py geom INPUT.html WORK/ --region .slide --bg '#05070c'
@@ -193,6 +207,7 @@ the only real cross-app risk left is **fonts**.
 
 ## Bundled resources
 
+- `scripts/check_deps.py` — dependency doctor (run first; `--fix` auto-installs).
 - `scripts/capture.py` — Chromium geometry dump (`geom`), fidelity board (`board`), transparent cutouts (`slice`).
 - `scripts/pptx_helpers.py` — python-pptx helpers (`E`,`P`,`rgb`,`new_deck`,`rrect`,`rect`,`oval`,`chip`,`textbox`,`picture`,`bg_fill`,`bg_image`,`save`,`set_font_family`,`target_cjk_font`).
 - `scripts/verify.py` — LibreOffice render + side-by-side compare + editability report.
@@ -200,6 +215,8 @@ the only real cross-app risk left is **fonts**.
 
 ## Prerequisites
 
-`python-pptx`, `Pillow`, `playwright` (Chromium), and LibreOffice (`soffice`) +
-`pdftoppm`. If `python -c "import pptx,PIL,playwright"` or `soffice --version`
-fails, install them first (see `references/playbook.md` §0).
+`python-pptx`, `Pillow`, `playwright` (Chromium) for building; LibreOffice
+(`soffice`) for the verify step (`pdftoppm` optional — LibreOffice exports PNG
+itself). **Don't check these by hand — run `scripts/check_deps.py` (step 0).** It
+verifies all of them and `--fix` installs the build deps; details in
+`references/playbook.md` §0.

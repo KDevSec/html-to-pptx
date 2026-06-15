@@ -18,17 +18,28 @@ page into a faithful, editable PowerPoint deck. Read this before your first buil
 
 ## §0 Environment & install
 
+**First, every time:** run the dependency doctor — it checks everything below in one
+shot and `--fix` installs the pip deps + Chromium (stdlib-only, runs even when
+nothing is installed):
 ```bash
-python3 -c "import pptx,PIL,playwright; print('py libs ok')"
+python scripts/check_deps.py            # report; exit 0 = all present
+python scripts/check_deps.py --fix      # auto-install pip deps + chromium
+```
+Tiers: **CORE** (build) = python-pptx, Pillow, playwright, Chromium. **VERIFY**
+(QA compare only) = LibreOffice; `pdftoppm` is **optional** (LibreOffice can export
+PNG itself, so `verify.py` falls back to `soffice --convert-to png`).
+What it verifies (equivalent manual checks):
+```bash
+python3 -c "import pptx,PIL,playwright; print('py libs ok')"   # NOT playwright.__version__ (no such attr)
 soffice --version || /opt/libreoffice*/program/soffice --version   # LibreOffice
-which pdftoppm
+which pdftoppm   # optional
 ```
 Install if missing:
 ```bash
 pip install --user python-pptx Pillow playwright        # add --break-system-packages on PEP668 distros
 python -m playwright install chromium                    # if no Chromium cached
-# LibreOffice: apt-get install -y libreoffice-impress  (Linux) / brew install --cask libreoffice (mac) / installer (win)
-# pdftoppm: part of poppler-utils
+# LibreOffice: apt-get install -y libreoffice-impress  (Linux) / brew install --cask libreoffice (mac) / winget install TheDocumentFoundation.LibreOffice (win)
+# pdftoppm (OPTIONAL, higher-res compare): poppler-utils (Linux) / brew install poppler (mac) / skip on Windows
 ```
 Any Chromium works (`google-chrome`, the playwright-bundled Chromium, or Edge).
 
@@ -194,3 +205,12 @@ confirm final look in the user's actual app.
    the slide background; check the actual page/template `background`.
 10. **Source typos** — replicate text faithfully, but fix obvious typos and tell
     the user (e.g. a mislabeled unit).
+11. **`playwright.__version__` raises AttributeError** — the module has no such
+    attribute. Check presence with `import playwright` (or `importlib.util.find_spec`),
+    never by reading `__version__`. `check_deps.py` does this right.
+12. **Windows: `soffice` not on PATH** — the installer doesn't add it. `verify.py`
+    and `check_deps.py` auto-probe `C:\Program Files\LibreOffice\program\soffice.exe`
+    (and the macOS app bundle), so a default install is found even without PATH.
+13. **Windows: pdftoppm/poppler is painful** — don't fight it. It's optional;
+    `verify.py` falls back to `soffice --convert-to png` (single-slide export), so
+    the QA compare still works with LibreOffice alone.

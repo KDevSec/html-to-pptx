@@ -24,7 +24,14 @@ git clone https://github.com/KDevSec/html-to-pptx.git ~/.claude/skills/html-to-p
 
 ## 前置依赖
 
-`python-pptx`、`Pillow`、`playwright`(Chromium),以及 `LibreOffice`(`soffice`)+ `pdftoppm`。一行安装见 `references/playbook.md` §0。
+构建需要 `python-pptx`、`Pillow`、`playwright`(Chromium);验证步骤需要 `LibreOffice`(`soffice`),`pdftoppm` **可选**(没有它 LibreOffice 也能直接导 PNG,Windows 上可跳过 poppler)。
+
+**不用手动逐个检查**——首次使用先跑依赖自检(纯标准库,缺啥也能跑):
+
+```bash
+python scripts/check_deps.py          # 只检查(exit 0 = 齐全)
+python scripts/check_deps.py --fix    # 自动装 pip 依赖 + Chromium;系统包(LibreOffice/pdftoppm)会打印对应 OS 命令
+```
 
 ## 用法
 
